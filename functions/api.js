@@ -8,18 +8,11 @@ import ServerlessHttp from "serverless-http";
 dotenv.config();
 
 const app = express();
-const dbUrl = process.env.MONGO_URI;
-
-// MongoDB connection
-mongoose.connect(dbUrl)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((error) => console.log("Error", error.message));
 
 // Middleware
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: true,
+  credentials: true
 }));
 app.use(express.json());
 
@@ -28,6 +21,24 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
 });
+
+// Database connection
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI environment variable is not defined');
+    }
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('MongoDB Connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error.message);
+    // Don't throw the error, just log it
+    return;
+  }
+};
+
+// Connect to MongoDB
+connectDB();
 
 // Routes
 app.get("/.netlify/functions/api", (req, res) => {

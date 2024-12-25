@@ -1,11 +1,16 @@
 [build]
   functions = "functions"
+  publish = "public"
   command = "npm run build"
 
 [functions]
   directory = "functions"
   node_bundler = "esbuild"
-  included_files = ["./Route/**/*", "./controller/**/*", "./model/**/*"]
+  external_node_modules = ["express", "mongoose"]
+  included_files = ["Route/**/*", "controller/**/*", "model/**/*"]
+
+[build.environment]
+  NODE_VERSION = "18"
 
 [[redirects]]
   from = "/"
