@@ -9,6 +9,9 @@
   external_node_modules = ["express", "mongoose"]
   included_files = ["Route/**/*", "controller/**/*", "model/**/*"]
 
+[functions.api]
+  timeout = 30
+
 [build.environment]
   NODE_VERSION = "18"
 
