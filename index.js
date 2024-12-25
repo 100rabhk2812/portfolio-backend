@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5001;
 const dbUrl = process.env.MONGO_URI;
 const app = express();
 
-// MongoDB connection code goes here
+// MongoDB connection
 try {
   mongoose.connect(dbUrl);
   console.log("Connected to MongoDB");
@@ -23,7 +23,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", function (req, res) {
-  res.send("Hello World!");
+  res.json({ message: "Hello World!" });
 });
 
 app.use("/users", userRouter);
