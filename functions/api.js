@@ -18,52 +18,75 @@ app.use(express.json());
 
 // MongoDB connection options
 const mongoOptions = {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-  socketTimeoutMS: 45000,         // Close sockets after 45 seconds
-  maxPoolSize: 10,                // Maintain up to 10 socket connections
-  connectTimeoutMS: 5000,         // Give up initial connection after 5 seconds
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 10,
+  connectTimeoutMS: 5000,
+  retryWrites: true,
+  w: "majority"
 };
 
-// Database connection with connection pooling
+// Database connection with better error handling
 let cachedDb = null;
 const connectDB = async () => {
   if (cachedDb) {
+    console.log('Using cached database connection');
     return cachedDb;
   }
 
   try {
-    if (!process.env.MONGO_URI) {
-      throw new Error('MONGO_URI environment variable is not defined');
+    const mongoUri = process.env.MONGO_URI;
+    
+    if (!mongoUri) {
+      console.error('MONGO_URI is not defined in environment variables');
+      throw new Error('MongoDB URI is not configured');
     }
 
-    const client = await mongoose.connect(process.env.MONGO_URI, mongoOptions);
+    console.log('Attempting to connect to MongoDB...');
+    const client = await mongoose.connect(mongoUri, mongoOptions);
+    
+    // Test the connection
+    await client.connection.db.admin().ping();
+    
     cachedDb = client;
-    console.log('MongoDB Connected');
+    console.log('Successfully connected to MongoDB');
     return cachedDb;
   } catch (error) {
-    console.error('MongoDB connection error:', error.message);
-    throw error;
+    console.error('MongoDB connection error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
+    throw new Error(`Failed to connect to MongoDB: ${error.message}`);
   }
 };
-
-// Routes with error handling
-app.get("/.netlify/functions/api", (req, res) => {
-  res.json({ message: "Backend API is running!" });
-});
 
 // Middleware to ensure database connection before processing requests
 app.use(async (req, res, next) => {
   try {
-    if (!cachedDb) {
+    if (!cachedDb || !mongoose.connection.readyState) {
+      console.log('No cached connection, attempting to connect...');
       await connectDB();
     }
     next();
   } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(500).json({ message: 'Database connection failed' });
+    console.error('Database middleware error:', error);
+    res.status(500).json({ 
+      message: 'Database connection failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 });
 
+// Test route to check API status
+app.get("/.netlify/functions/api", (req, res) => {
+  res.json({ 
+    message: "Backend API is running!",
+    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+// Routes
 app.use("/.netlify/functions/api/users", userRouter);
 
 // Handle 404
@@ -73,8 +96,11 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  console.error('Global error handler:', err);
+  res.status(500).json({ 
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
 });
 
 // Export handler for serverless
