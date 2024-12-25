@@ -5,8 +5,19 @@
 [functions]
   directory = "functions"
   node_bundler = "esbuild"
+  included_files = ["./Route/**/*", "./controller/**/*", "./model/**/*"]
+
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/users/*"
+  to = "/.netlify/functions/api/users/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/api/:splat"
+  to = "/index.html"
   status = 200

@@ -16,15 +16,30 @@ mongoose.connect(dbUrl)
   .catch((error) => console.log("Error", error.message));
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});
 
 // Routes
 app.get("/.netlify/functions/api", (req, res) => {
-  res.json({ message: "Hello from API!" });
+  res.json({ message: "Backend API is running!" });
 });
 
 app.use("/.netlify/functions/api/users", userRouter);
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 // Export handler for serverless
 export const handler = ServerlessHttp(app);

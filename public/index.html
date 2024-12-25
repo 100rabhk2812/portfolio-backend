@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .endpoint {
+            background: #f4f4f4;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Backend API Documentation</h1>
+    <p>Welcome to the API. The following endpoints are available:</p>
+    
+    <div class="endpoint">
+        <h3>GET /.netlify/functions/api</h3>
+        <p>Returns a welcome message</p>
+    </div>
+
+    <div class="endpoint">
+        <h3>GET /.netlify/functions/api/users</h3>
+        <p>Access user-related endpoints</p>
+    </div>
+
+    <script>
+        // Test the API connection
+        fetch('/.netlify/functions/api')
+            .then(response => response.json())
+            .then(data => console.log('API Response:', data))
+            .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>
